@@ -47,6 +47,12 @@ config SOC_CAMERA_OV2640
 	help
 	  This is a ov2640 camera driver
 
+config SOC_CAMERA_OV6211
+	tristate "ov6211 camera support"
+	depends on SOC_CAMERA && I2C
+	help
+	  This is a ov6211 camera driver
+
 config SOC_CAMERA_OV5642
 	tristate "ov5642 camera support"
 	depends on SOC_CAMERA && I2C
