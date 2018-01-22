@@ -437,9 +437,9 @@
 /*
  * ID
  */
-#define MANUFACTURER_ID	0x7FA2
+#define MANUFACTURER_ID	0xFFFF
 #define PID_ov6211	0x2642
-#define VERSION(pid, ver) ((pid << 8) | (ver & 0xFF))
+#define VERSION(idh, idl) ((idh << 8) | (idl & 0xFF))
 
 /*
  * Struct
@@ -729,14 +729,9 @@ static const struct regval_list ov6211_uxga_regs[] = {
 	{.name = n, .width = w , .height = h, .regs = r }
 
 static const struct ov6211_win_size ov6211_supported_win_sizes[] = {
-	ov6211_SIZE("QCIF", QCIF_WIDTH, QCIF_HEIGHT, ov6211_qcif_regs),
-	ov6211_SIZE("QVGA", QVGA_WIDTH, QVGA_HEIGHT, ov6211_qvga_regs),
-	ov6211_SIZE("CIF", CIF_WIDTH, CIF_HEIGHT, ov6211_cif_regs),
-	ov6211_SIZE("VGA", VGA_WIDTH, VGA_HEIGHT, ov6211_vga_regs),
-	ov6211_SIZE("SVGA", SVGA_WIDTH, SVGA_HEIGHT, ov6211_svga_regs),
-	ov6211_SIZE("XGA", XGA_WIDTH, XGA_HEIGHT, ov6211_xga_regs),
-	ov6211_SIZE("SXGA", SXGA_WIDTH, SXGA_HEIGHT, ov6211_sxga_regs),
-	ov6211_SIZE("UXGA", UXGA_WIDTH, UXGA_HEIGHT, ov6211_uxga_regs),
+	ov6211_SIZE("100x100", 100, 100, ov6211_100x100_regs),
+	ov6211_SIZE("200x200", 200, 200, ov6211_200x200_regs),
+	ov6211_SIZE("400x400", 400, 400, ov6211_400x400_regs),
 };
 
 /*
@@ -1129,7 +1124,7 @@ static int ov6211_get_selection(struct v4l2_subdev *sd,
 static int ov6211_video_probe(struct i2c_client *client)
 {
 	struct ov6211_priv *priv = to_ov6211(client);
-	u8 pid, ver, midh, midl;
+	u8 verh,verl;
 	const char *devname;
 	int ret;
 
@@ -1140,13 +1135,11 @@ static int ov6211_video_probe(struct i2c_client *client)
 	/*
 	 * check and show product ID and manufacturer ID
 	 */
-	i2c_smbus_write_byte_data(client, BANK_SEL, BANK_SEL_SENS);
-	pid  = i2c_smbus_read_byte_data(client, PID);
-	ver  = i2c_smbus_read_byte_data(client, VER);
-	midh = i2c_smbus_read_byte_data(client, MIDH);
-	midl = i2c_smbus_read_byte_data(client, MIDL);
 
-	switch (VERSION(pid, ver)) {
+	verl  = i2c_smbus_read_byte_data(client, OV6211_SC_CHIP_ID_L);
+	verh  = i2c_smbus_read_byte_data(client, OV6211_SC_CHIP_ID_H);
+
+	switch (VERSION(verh, verl)) {
 	case PID_ov6211:
 		devname     = "ov6211";
 		break;
@@ -1294,7 +1287,7 @@ static int ov6211_probe(struct i2c_client *client,
 		return -ENOMEM;
 	}
 
-	priv->clk = v4l2_clk_get(&client->dev, "xvclk");
+	priv->clk = v4l2_clk_get(&client->dev, "pclk");
 	if (IS_ERR(priv->clk))
 		return -EPROBE_DEFER;
 
